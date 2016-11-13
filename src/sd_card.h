@@ -1,4 +1,3 @@
-#include <Arduino.h>
 #include <LinkedList.h>
 
 #define IMAGE_FILE_TYPE ".txt"
@@ -111,6 +110,10 @@ uint8_t getFrameCount() {
     }
 
     return count;
+}
+
+uint8_t *getCurrentFrame() {
+    return current_frame;
 }
 
 uint8_t *getNextFrame() {

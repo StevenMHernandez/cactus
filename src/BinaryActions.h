@@ -8,6 +8,7 @@ public:
     void reset();
     void update(uint16_t value);
     bool isDone();
+    bool isBeingHandled();
     bool isHeld();
     bool isLeft();
     bool isRight();

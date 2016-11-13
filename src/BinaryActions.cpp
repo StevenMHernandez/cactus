@@ -97,3 +97,7 @@ bool BinaryActions::isLeft() {
 bool BinaryActions::isRight() {
     return (this->l + this->r) / (int) (SIZE / 2) > 0;
 }
+
+bool BinaryActions::isBeingHandled() {
+    return this->time_not_touching == 0;
+}
