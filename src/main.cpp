@@ -15,10 +15,10 @@
 
 #define LEFT_EYE 0
 #define RIGHT_EYE 1
-Adafruit_SSD1306 leftEyeScreen(OLED_RESET);
-Adafruit_SSD1306 rightEyeScreen(OLED_RESET);
-Eye leftEye;
-Eye rightEye;
+Adafruit_SSD1306 leftEyeScreen = Adafruit_SSD1306(OLED_RESET);
+Adafruit_SSD1306 rightEyeScreen = Adafruit_SSD1306(OLED_RESET);
+Eye leftEye = Eye();
+Eye rightEye = Eye();
 
 Adafruit_MPR121 spikes = Adafruit_MPR121();
 
@@ -36,7 +36,7 @@ File newFile;
 void setup() {
     Serial.begin(9600);
 
-    while (!Serial) { }
+//    while (!Serial) { }
 
     if (!SD.begin(chipSelect)) {
         Serial.println("initialization failed!");
@@ -75,27 +75,29 @@ void setup() {
 //    while (!spikes.touched()) { }
 }
 
-void drawFrame(uint8_t eye_id, Adafruit_SSD1306 display, Eye eye) {
+void drawFrame(uint8_t eye_id, Adafruit_SSD1306 display, Eye& eye) {
     tcaselect(eye_id);
-//    switch (eye.status) {
+
+    switch (eye.status) {
 //        case SHOW_FRAME:
 //            display.clearDisplay();
 //            // TODO: get next frame only after x amount of time.
 //            display.drawBitmap(16, 0, getNextFrame(), 64, 64, WHITE);
 //            display.display();
 //            break;
-//        case SHOW_MESSAGE:
+        case SHOW_MESSAGE:
             drawMessageOnScreen(display);
-//            break;
-//        case SHOW_TRANSITION:
-//            if (eye.transition->update(display)) {
-//                eye.status = eye.next_status;
-//                eye.next_status = SHOW_TRANSITION;
-//                break;
-//            }
-//        default:
-//            break;
-//    }
+            break;
+        case SHOW_TRANSITION:
+            eye.transition->update(display);
+
+            if (eye.transition->done()) {
+                eye.updateStatus();
+            }
+            break;
+        default:
+            break;
+    }
 }
 
 uint16_t currtouched;
@@ -139,7 +141,12 @@ void loop() {
 //        }
 //    }
 
-    update_message_location();
+    if (leftEye.status == SHOW_MESSAGE || rightEye.status == SHOW_MESSAGE) {
+        update_message_location();
+    } else {
+        reset_message_location();
+    }
+
     drawFrame(LEFT_EYE, leftEyeScreen, leftEye);
     drawFrame(RIGHT_EYE, rightEyeScreen, rightEye);
 

@@ -12,6 +12,10 @@ void set_message(LinkedList<char *> m) {
     }
 }
 
+void reset_message_location() {
+    drawLocation = 64;
+}
+
 int update_message_location() {
     drawLocation -= 1;
 

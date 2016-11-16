@@ -6,9 +6,10 @@
 
 class Eye {
 public:
-    int status = SHOW_FRAME;
-    int next_status = SHOW_TRANSITION;
+    int status = SHOW_TRANSITION;
+    int next_status = SHOW_MESSAGE;
     Transition *transition = new Transition;
+
     void transitionToNextStatus() {
         if (this->status == SHOW_FRAME) {
             this->status = SHOW_TRANSITION;
@@ -17,5 +18,10 @@ public:
             this->status = SHOW_TRANSITION;
             this->next_status = SHOW_FRAME;
         }
+    }
+
+    void updateStatus() {
+        this->status = this->next_status;
+        this->next_status = SHOW_TRANSITION;
     }
 };
