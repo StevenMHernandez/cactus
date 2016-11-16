@@ -35,6 +35,7 @@ File newFile;
 
 void setup() {
     Serial.begin(9600);
+
     while (!Serial) { }
 
     if (!SD.begin(chipSelect)) {
@@ -44,10 +45,16 @@ void setup() {
 
     build_sd_cache();
 
+    // NOTE: it looks like calling tcaselect before any other i2c
+    // command halts the program
+    // so, I placed these here and everything goes ok. For some reason.
+    leftEyeScreen.begin(SSD1306_SWITCHCAPVCC, 0x3C);
+    rightEyeScreen.begin(SSD1306_SWITCHCAPVCC, 0x3C);
+
     tcaselect(LEFT_EYE);
     leftEyeScreen.begin(SSD1306_SWITCHCAPVCC, 0x3C);
     leftEyeScreen.clearDisplay();
-    leftEyeScreen.setTextSize(2);
+    leftEyeScreen.setTextSize(1);
     leftEyeScreen.setTextColor(WHITE);
     leftEyeScreen.setTextWrap(false);
     leftEyeScreen.display();
@@ -55,70 +62,82 @@ void setup() {
     tcaselect(RIGHT_EYE);
     rightEyeScreen.begin(SSD1306_SWITCHCAPVCC, 0x3C);
     rightEyeScreen.clearDisplay();
-    rightEyeScreen.setTextSize(2);
+    rightEyeScreen.setTextSize(1);
     rightEyeScreen.setTextColor(WHITE);
     rightEyeScreen.setTextWrap(false);
     rightEyeScreen.display();
 
     spikes.begin(0x5A);
 
-    while (!spikes.touched()) { }
+    getRandomDirectory();
+    set_message(getMessage());
+
+//    while (!spikes.touched()) { }
 }
 
 void drawFrame(uint8_t eye_id, Adafruit_SSD1306 display, Eye eye) {
     tcaselect(eye_id);
-    switch (eye.status) {
-        case SHOW_FRAME: {
-            display.clearDisplay();
-            // TODO: get next frame only after x amount of time.
-            display.drawBitmap(16, 0, getNextFrame(), 64, 64, WHITE);
-            display.display();
-        }
-        case SHOW_MESSAGE: {
+//    switch (eye.status) {
+//        case SHOW_FRAME:
+//            display.clearDisplay();
+//            // TODO: get next frame only after x amount of time.
+//            display.drawBitmap(16, 0, getNextFrame(), 64, 64, WHITE);
+//            display.display();
+//            break;
+//        case SHOW_MESSAGE:
             drawMessageOnScreen(display);
-        }
-        case SHOW_TRANSITION: {
-            if (eye.transition->update(display)) {
-                eye.status = eye.next_status;
-                eye.next_status = SHOW_TRANSITION;
-            }
-        }
-        default:
-            break;
-    }
+//            break;
+//        case SHOW_TRANSITION:
+//            if (eye.transition->update(display)) {
+//                eye.status = eye.next_status;
+//                eye.next_status = SHOW_TRANSITION;
+//                break;
+//            }
+//        default:
+//            break;
+//    }
 }
 
+uint16_t currtouched;
+
 void loop() {
-    static uint16_t currtouched = spikes.touched();
+    currtouched = spikes.touched();
 
     leftSpikes.update(currtouched);
     rightSpikes.update(currtouched);
 
-    if (leftSpikes.isDone() || rightSpikes.isDone()) {
-        // if the other side is being touched, lets wait to see the out come from that is
-        if (!leftSpikes.isBeingHandled() || !rightSpikes.isBeingHandled()) {
-            if (leftSpikes.isDone() && rightSpikes.isDone()) {
-                // switch scenes
-                getRandomDirectory();
-
-                leftEye.status = SHOW_TRANSITION;
-                rightEye.status = SHOW_TRANSITION;
-                leftEye.next_status = SHOW_FRAME;
-                rightEye.next_status = SHOW_FRAME;
-                leftEye.transition->setDirection(leftSpikes.getDirection());
-                rightEye.transition->setDirection(rightSpikes.getDirection());
-            } else if (leftSpikes.isDone()) {
-                leftEye.transitionToNextStatus();
-                leftEye.transition->setDirection(leftSpikes.getDirection());
-            } else if (rightSpikes.isDone()) {
-                rightEye.transitionToNextStatus();
-                rightEye.transition->setDirection(rightSpikes.getDirection());
-            }
-
-            leftSpikes.reset();
-            rightSpikes.reset();
-        }
-    }
+//    if (leftSpikes.isDone() || rightSpikes.isDone()) {
+//        Serial.println(leftSpikes.isDone());
+//        Serial.println(rightSpikes.isDone());
+//        // if the other side is being touched, lets wait to see the out come from that is
+//        if (leftSpikes.isBeingHandled() || rightSpikes.isBeingHandled()) {
+//            if (leftSpikes.isDone() && rightSpikes.isDone()) {
+//                Serial.println("both");
+//                Serial.println(millis());
+//                // switch scenes
+//                getRandomDirectory();
+//
+//                leftEye.status = SHOW_TRANSITION;
+//                rightEye.status = SHOW_TRANSITION;
+//                leftEye.next_status = SHOW_FRAME;
+//                rightEye.next_status = SHOW_FRAME;
+//                leftEye.transition->setDirection(leftSpikes.getDirection());
+//                rightEye.transition->setDirection(rightSpikes.getDirection());
+//            } else if (leftSpikes.isDone()) {
+//                Serial.println("left");
+//                leftEye.transitionToNextStatus();
+//                leftEye.transition->setDirection(leftSpikes.getDirection());
+//            } else if (rightSpikes.isDone()) {
+//                Serial.println("right");
+//                rightEye.transitionToNextStatus();
+//                rightEye.transition->setDirection(rightSpikes.getDirection());
+//            }
+//
+//            Serial.println("reset");
+//            leftSpikes.reset();
+//            rightSpikes.reset();
+//        }
+//    }
 
     update_message_location();
     drawFrame(LEFT_EYE, leftEyeScreen, leftEye);

@@ -61,7 +61,7 @@ void loadNewMessageLines() {
 
     while (messageFile.available()) {
         char n = (char) messageFile.read();
-        if (n == '\n' || str_i > 8) {
+        if (n == '\n' || str_i >= 8) {
             message.add(str);
             str = newCh(9);
             str_i = 0;
@@ -76,6 +76,8 @@ void loadNewMessageLines() {
     if (str_i != 0) {
         message.add(str);
     }
+
+    messageFile.close();
 }
 
 File getRandomDirectory() {
@@ -134,5 +136,11 @@ uint8_t *getNextFrame() {
 
     image.read(current_frame, 512);
 
+    image.close();
+
     return current_frame;
+}
+
+LinkedList<char *> getMessage() {
+    return message;
 }

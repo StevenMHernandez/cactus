@@ -1,42 +1,40 @@
 #include <LinkedList.h>
 
-LinkedList<char *> current_message;
 LinkedList<char *> screen_queue;
 
-int draw_location = 64;
+int hiddenLineCount = 0;
 
-void populate_screen_queue() {
-    for (int i = 0; i < current_message.size(); i++) {
-        screen_queue.add(i, current_message.get(i));
-    }
-}
+int drawLocation = 64;
 
 void set_message(LinkedList<char *> m) {
-    current_message = m;
-    populate_screen_queue();
+    for (int i = 0; i < m.size(); i++) {
+        screen_queue.add(i, m.get(i));
+    }
 }
 
 int update_message_location() {
-    draw_location--;
+    drawLocation -= 1;
 
-    if (draw_location >= -16) {
-        screen_queue.pop();
+    if (drawLocation <= -16) {
+        if (screen_queue.size() == hiddenLineCount) {
+            drawLocation = 64;
+            hiddenLineCount = 0;
+        } else {
+            drawLocation += 16;
 
-        if (screen_queue.size() == 0) {
-            draw_location = 64 + 32;
-            populate_screen_queue();
+            hiddenLineCount++;
         }
     }
 
-    return draw_location;
+    return drawLocation;
 }
 
 void drawMessageOnScreen(Adafruit_SSD1306 eye) {
     eye.clearDisplay();
 
-    for (int i = 0; i < 4; i++) {
-        eye.setCursor(0, i * 16);
-        eye.println(screen_queue.get(i));
+    for (int i = 0; i < 5; i++) {
+        eye.setCursor(32, i * 16 + drawLocation);
+        eye.println(screen_queue.get(i + hiddenLineCount));
     }
 
     eye.display();
