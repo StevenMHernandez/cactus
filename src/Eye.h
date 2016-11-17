@@ -7,7 +7,7 @@
 class Eye {
 public:
     int status = SHOW_TRANSITION;
-    int next_status = SHOW_MESSAGE;
+    int next_status = SHOW_FRAME;
     Transition *transition = new Transition;
 
     void transitionToNextStatus() {

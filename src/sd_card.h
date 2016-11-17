@@ -11,9 +11,11 @@ File selected_directory;
 uint8_t current_frame_id = 0;
 uint8_t current_frame[512];
 
+File dir;
+File entry;
+
 uint8_t build_sd_cache() {
-    File dir = SD.open("/");
-    File entry;
+    dir = SD.open("/");
 
     while (true) {
         entry = dir.openNextFile();
@@ -21,6 +23,7 @@ uint8_t build_sd_cache() {
         if (!entry) {
             break;
         }
+
         if (entry.isDirectory()
             && strcmp(entry.name(), "TRASHE~1") != 0
             && strcmp(entry.name(), "SPOTLI~1") != 0
@@ -28,6 +31,7 @@ uint8_t build_sd_cache() {
                 ) {
             directories.add(entry);
         }
+
         entry.close();
     }
 
@@ -42,10 +46,13 @@ char *newCh(int length) {
     for (int i = 0; i < length; i++) {
         str[i] = ' ';
     }
+
     str[length] = '\0';
 
     return str;
 }
+
+int str_i;
 
 void loadNewMessageLines() {
     String dir = selected_directory.name();
@@ -57,7 +64,7 @@ void loadNewMessageLines() {
     message.clear();
 
     char *str = newCh(9);
-    int str_i = 0;
+    str_i = 0;
 
     while (messageFile.available()) {
         char n = (char) messageFile.read();
@@ -118,6 +125,9 @@ uint8_t *getCurrentFrame() {
     return current_frame;
 }
 
+char id_buffer[33];
+char filename[100];
+
 uint8_t *getNextFrame() {
     current_frame_id++;
     if (current_frame_id > getFrameCount()) {
@@ -126,11 +136,9 @@ uint8_t *getNextFrame() {
 
     String dir = selected_directory.name();
 
-    char id_buffer[33];
     itoa(current_frame_id, id_buffer, 10);
 
-    char filename[100];
-    dir.concat("/").concat(id_buffer).concat(".TXT").toCharArray(filename, 100);
+    dir.concat("/").concat(id_buffer).concat(".BIN").toCharArray(filename, 100);
 
     File image = SD.open((char *) filename);
 

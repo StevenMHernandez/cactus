@@ -75,16 +75,15 @@ void setup() {
 //    while (!spikes.touched()) { }
 }
 
-void drawFrame(uint8_t eye_id, Adafruit_SSD1306 display, Eye& eye) {
+void drawFrame(uint8_t eye_id, Adafruit_SSD1306 &display, Eye &eye) {
     tcaselect(eye_id);
 
     switch (eye.status) {
-//        case SHOW_FRAME:
-//            display.clearDisplay();
-//            // TODO: get next frame only after x amount of time.
-//            display.drawBitmap(16, 0, getNextFrame(), 64, 64, WHITE);
-//            display.display();
-//            break;
+        case SHOW_FRAME:
+            display.clearDisplay();
+            display.drawBitmap(32, 0, getCurrentFrame(), 64, 64, WHITE);
+            display.display();
+            break;
         case SHOW_MESSAGE:
             drawMessageOnScreen(display);
             break;
@@ -100,7 +99,9 @@ void drawFrame(uint8_t eye_id, Adafruit_SSD1306 display, Eye& eye) {
     }
 }
 
-uint16_t currtouched;
+uint16_t currtouched = 0;
+
+int update_counter = 0;
 
 void loop() {
     currtouched = spikes.touched();
@@ -108,47 +109,52 @@ void loop() {
     leftSpikes.update(currtouched);
     rightSpikes.update(currtouched);
 
-//    if (leftSpikes.isDone() || rightSpikes.isDone()) {
-//        Serial.println(leftSpikes.isDone());
-//        Serial.println(rightSpikes.isDone());
-//        // if the other side is being touched, lets wait to see the out come from that is
-//        if (leftSpikes.isBeingHandled() || rightSpikes.isBeingHandled()) {
-//            if (leftSpikes.isDone() && rightSpikes.isDone()) {
-//                Serial.println("both");
-//                Serial.println(millis());
-//                // switch scenes
-//                getRandomDirectory();
-//
-//                leftEye.status = SHOW_TRANSITION;
-//                rightEye.status = SHOW_TRANSITION;
-//                leftEye.next_status = SHOW_FRAME;
-//                rightEye.next_status = SHOW_FRAME;
-//                leftEye.transition->setDirection(leftSpikes.getDirection());
-//                rightEye.transition->setDirection(rightSpikes.getDirection());
-//            } else if (leftSpikes.isDone()) {
-//                Serial.println("left");
-//                leftEye.transitionToNextStatus();
-//                leftEye.transition->setDirection(leftSpikes.getDirection());
-//            } else if (rightSpikes.isDone()) {
-//                Serial.println("right");
-//                rightEye.transitionToNextStatus();
-//                rightEye.transition->setDirection(rightSpikes.getDirection());
-//            }
-//
-//            Serial.println("reset");
-//            leftSpikes.reset();
-//            rightSpikes.reset();
-//        }
-//    }
+    if (leftSpikes.isDone() || rightSpikes.isDone()) {
+        // if the other side is being touched, lets wait to see the out come from that is
+        if (leftSpikes.isBeingHandled() || rightSpikes.isBeingHandled()) {
+            if (leftSpikes.isDone() && rightSpikes.isDone() && leftEye.status != SHOW_TRANSITION && rightEye.status != SHOW_TRANSITION) {
+                // switch scenes
+                getRandomDirectory();
 
-    if (leftEye.status == SHOW_MESSAGE || rightEye.status == SHOW_MESSAGE) {
-        update_message_location();
-    } else {
-        reset_message_location();
+                leftEye.updateStatus();
+                rightEye.updateStatus();
+
+                leftEye.transition->setDirection(leftSpikes.getDirection());
+                rightEye.transition->setDirection(rightSpikes.getDirection());
+
+                leftEye.transition->reset();
+                rightEye.transition->reset();
+            } else if (leftSpikes.isDone() && leftEye.status != SHOW_TRANSITION) {
+                leftEye.transitionToNextStatus();
+                leftEye.transition->setDirection(leftSpikes.getDirection());
+                leftEye.transition->reset();
+            } else if (rightSpikes.isDone() && rightEye.status != SHOW_TRANSITION) {
+                rightEye.transitionToNextStatus();
+                rightEye.transition->setDirection(rightSpikes.getDirection());
+                leftEye.transition->reset();
+            }
+
+            leftSpikes.reset();
+            rightSpikes.reset();
+        }
     }
 
-    drawFrame(LEFT_EYE, leftEyeScreen, leftEye);
-    drawFrame(RIGHT_EYE, rightEyeScreen, rightEye);
+    if (update_counter++ > 4) {
+        if (leftEye.status == SHOW_MESSAGE || rightEye.status == SHOW_MESSAGE) {
+            update_message_location();
+        } else {
+            reset_message_location();
+        }
+
+        if (leftEye.status == SHOW_FRAME || rightEye.status == SHOW_FRAME) {
+            getNextFrame();
+        }
+
+        drawFrame(LEFT_EYE, leftEyeScreen, leftEye);
+        drawFrame(RIGHT_EYE, rightEyeScreen, rightEye);
+
+        update_counter = 0;
+    }
 
     delay(1);
 }

@@ -6,8 +6,10 @@ bool bitAtK(uint8_t value, int k) {
     return (value & (1 << k)) != 0;
 }
 
+int trueBitCount;
+
 bool isEmpty(uint8_t value, uint8_t begin, uint8_t end) {
-    static int trueBitCount = 0;
+    trueBitCount = 0;
     for (uint8_t i = end; i > begin; i--) {
         if (bitAtK(value, i - 1)) {
             trueBitCount++;
@@ -33,11 +35,12 @@ void BinaryActions::reset() {
 
 void BinaryActions::update(uint16_t value) {
     if (isEmpty(value, this->begin, this->end)) {
-        this->time_not_touching++;
-
-        if (this->time_not_touching == 250) {
+        if (this->time_not_touching >= 50) {
             this->done = true;
+            return;
         }
+
+        this->time_not_touching++;
 
         return;
     }
@@ -47,7 +50,9 @@ void BinaryActions::update(uint16_t value) {
     }
 
     if (value == this->prev) {
-        this->time_held++;
+        if (time_held < 100) {
+            this->time_held++;
+        }
     } else {
         this->time_not_touching = 0;
         this->time_held = 0;
@@ -87,7 +92,7 @@ bool BinaryActions::isDone() {
 }
 
 bool BinaryActions::isHeld() {
-    return this->time_held > 50;
+    return this->time_held >= 50;
 }
 
 bool BinaryActions::isLeft() {

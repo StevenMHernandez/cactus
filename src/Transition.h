@@ -4,16 +4,17 @@ public:
     uint16_t color = 1;
     int direction = -1;
 
+    void reset() {
+        uint16_t color = 1;
+        setPosition();
+    }
+
     void setPosition() {
-        if (direction > 0) {
-            position = 64;
-        } else {
-            position = 0;
-        }
+        position = direction > 0 ? 64 : 0;
     };
 
     void setDirection(int d) {
-        direction = d;
+        direction = d != 0 ? d : 1;
         setPosition();
     };
 
@@ -22,22 +23,22 @@ public:
     }
 
     // returns true if done
-    void update(Adafruit_SSD1306 display) {
+    void update(Adafruit_SSD1306 &display) {
         if (direction < 0) {
-            for (int i = 0; i < 8; ++i) {
-                display.drawFastHLine(0, ++position, SSD1306_LCDWIDTH, color);
-            }
+            display.fillRect(0, 0, 128, 64, color - 1);
+            display.fillRect(0, 0, 128, position, color);
+            position += 64;
         } else if (direction > 0) {
-            for (int i = 0; i < 8; ++i) {
-                display.drawFastHLine(0, --position, SSD1306_LCDWIDTH, color);
-            }
+            display.fillRect(0, 0, 128, 64, color - 1);
+            display.fillRect(0, 0, 128, position, color);
+            position -= 64;
         }
 
         display.display();
 
-        if (position <= 0 || position >= 64) {
-            if (color != 0) {
-                color = 0;
+        if (position < 0 || position > 64) {
+            if (color != 2) {
+                color = 2;
                 setPosition();
             } else {
                 color = 1;
