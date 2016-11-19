@@ -1,15 +1,16 @@
 #include <LinkedList.h>
+#include "Frame.h"
 
-#define IMAGE_FILE_TYPE ".txt"
-#define MESSAGE_FILE_TYPE ".txt"
+#define IMAGE_FILE_TYPE ".BIN"
+#define MESSAGE_FILE_TYPE ".TXT"
 
 LinkedList<File> directories;
 LinkedList<char *> message;
+LinkedList<Frame> frames;
 
 File selected_directory;
 
 uint8_t current_frame_id = 0;
-uint8_t current_frame[512];
 
 File dir;
 File entry;
@@ -40,31 +41,33 @@ uint8_t build_sd_cache() {
     return (uint8_t) directories.size();
 }
 
+char *newChStr;
+
 char *newCh(int length) {
-    char *str = new char[length + 1];
+    newChStr = new char[length + 1];
 
     for (int i = 0; i < length; i++) {
-        str[i] = ' ';
+        newChStr[i] = ' ';
     }
 
-    str[length] = '\0';
+    newChStr[length] = '\0';
 
-    return str;
+    return newChStr;
 }
 
-int str_i;
-
 void loadNewMessageLines() {
+    message.clear();
+
     String dir = selected_directory.name();
     char messageFileName[100];
     dir.concat("/message.txt").toCharArray(messageFileName, 100);
 
-    File messageFile = SD.open((char *) messageFileName);
+    Serial.println(messageFileName);
 
-    message.clear();
+    File messageFile = SD.open(messageFileName);
 
     char *str = newCh(9);
-    str_i = 0;
+    int str_i = 0;
 
     while (messageFile.available()) {
         char n = (char) messageFile.read();
@@ -87,16 +90,10 @@ void loadNewMessageLines() {
     messageFile.close();
 }
 
-File getRandomDirectory() {
-    selected_directory = directories.get(random(0, directories.size()));
-    current_frame_id = 0;
-    loadNewMessageLines();
-    return selected_directory;
-}
+void loadFrames() {
+    frames.clear();
 
-uint8_t getFrameCount() {
     File directory = SD.open(selected_directory.name());
-    uint8_t count = 0;
 
     File entry;
 
@@ -112,43 +109,40 @@ uint8_t getFrameCount() {
             && strcmp(entry.name(), "MESSAGE.TXT") != 0
             && entry.name()[0] != '_'
                 ) {
-            count++;
+
+            Frame frame = Frame();
+            entry.read(frame.data, 512);
+            frames.add(frame);
         }
 
         entry.close();
     }
 
-    return count;
+    Serial.println(frames.size());
+}
+
+File getRandomDirectory() {
+    selected_directory = directories.get(millis() % directories.size());
+    Serial.println(selected_directory.name());
+    current_frame_id = 0;
+    loadNewMessageLines();
+    loadFrames();
+    return selected_directory;
 }
 
 uint8_t *getCurrentFrame() {
-    return current_frame;
+    return frames.get(current_frame_id).data;
 }
-
-char id_buffer[33];
-char filename[100];
 
 uint8_t *getNextFrame() {
     current_frame_id++;
-    if (current_frame_id > getFrameCount()) {
+    if (current_frame_id >= frames.size()) {
         current_frame_id = 1;
     }
 
-    String dir = selected_directory.name();
-
-    itoa(current_frame_id, id_buffer, 10);
-
-    dir.concat("/").concat(id_buffer).concat(".BIN").toCharArray(filename, 100);
-
-    File image = SD.open((char *) filename);
-
-    image.read(current_frame, 512);
-
-    image.close();
-
-    return current_frame;
+    return getCurrentFrame();
 }
 
-LinkedList<char *> getMessage() {
+LinkedList<char *>& getMessage() {
     return message;
 }

@@ -22,7 +22,7 @@ Eye rightEye = Eye();
 
 Adafruit_MPR121 spikes = Adafruit_MPR121();
 
-BinaryActions leftSpikes = BinaryActions(0, 5);
+BinaryActions leftSpikes = BinaryActions(0, 4);
 BinaryActions rightSpikes = BinaryActions(7, 11);
 
 File myFile;
@@ -67,12 +67,14 @@ void setup() {
     rightEyeScreen.setTextWrap(false);
     rightEyeScreen.display();
 
+    delay(1000);
+
     spikes.begin(0x5A);
+
+    while (!spikes.touched()) { }
 
     getRandomDirectory();
     set_message(getMessage());
-
-//    while (!spikes.touched()) { }
 }
 
 void drawFrame(uint8_t eye_id, Adafruit_SSD1306 &display, Eye &eye) {
@@ -109,29 +111,29 @@ void loop() {
     leftSpikes.update(currtouched);
     rightSpikes.update(currtouched);
 
-    if (leftSpikes.isDone() || rightSpikes.isDone()) {
-        // if the other side is being touched, lets wait to see the out come from that is
-        if (leftSpikes.isBeingHandled() || rightSpikes.isBeingHandled()) {
-            if (leftSpikes.isDone() && rightSpikes.isDone() && leftEye.status != SHOW_TRANSITION && rightEye.status != SHOW_TRANSITION) {
+    if (leftSpikes.isReleased() && rightSpikes.isReleased()) {
+        if (rightSpikes.wasTouched() || leftSpikes.wasTouched()) {
+            if (rightSpikes.wasTouched() && leftSpikes.wasTouched()) {
                 // switch scenes
                 getRandomDirectory();
+                set_message(getMessage());
 
-                leftEye.updateStatus();
-                rightEye.updateStatus();
+                leftEye.resetStatus();
+                rightEye.resetStatus();
 
-                leftEye.transition->setDirection(leftSpikes.getDirection());
-                rightEye.transition->setDirection(rightSpikes.getDirection());
+                leftEye.transition->setDirection(1);
+                rightEye.transition->setDirection(1);
 
                 leftEye.transition->reset();
                 rightEye.transition->reset();
-            } else if (leftSpikes.isDone() && leftEye.status != SHOW_TRANSITION) {
+            } else if (leftSpikes.wasTouched() && leftEye.status != SHOW_TRANSITION) {
                 leftEye.transitionToNextStatus();
-                leftEye.transition->setDirection(leftSpikes.getDirection());
+                leftEye.transition->setDirection(1);
                 leftEye.transition->reset();
-            } else if (rightSpikes.isDone() && rightEye.status != SHOW_TRANSITION) {
+            } else if (rightSpikes.wasTouched() && rightEye.status != SHOW_TRANSITION) {
                 rightEye.transitionToNextStatus();
-                rightEye.transition->setDirection(rightSpikes.getDirection());
-                leftEye.transition->reset();
+                rightEye.transition->setDirection(1);
+                rightEye.transition->reset();
             }
 
             leftSpikes.reset();
@@ -150,8 +152,8 @@ void loop() {
             getNextFrame();
         }
 
-        drawFrame(LEFT_EYE, leftEyeScreen, leftEye);
         drawFrame(RIGHT_EYE, rightEyeScreen, rightEye);
+        drawFrame(LEFT_EYE, leftEyeScreen, leftEye);
 
         update_counter = 0;
     }

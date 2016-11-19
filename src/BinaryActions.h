@@ -7,21 +7,11 @@ public:
 
     void reset();
     void update(uint16_t value);
-    bool isDone();
-    bool isBeingHandled();
-    bool isHeld();
-    bool isLeft();
-    bool isRight();
-    int8_t getDirection();
-    uint8_t time_not_touching = 0;
+    bool isReleased();
+    bool wasTouched();
 private:
     uint8_t begin = 0;
     uint8_t end = 0;
-    bool done = false;
-    uint16_t prev = 0;
-    uint16_t prevL = 0;
-    uint16_t prevR = 0;
-    int8_t l = 0;
-    int8_t r = 0;
-    uint8_t time_held = 0;
+    uint8_t touched = 0;
+    bool released = false;
 };

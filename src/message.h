@@ -6,14 +6,18 @@ int hiddenLineCount = 0;
 
 int drawLocation = 64;
 
-void set_message(LinkedList<char *> m) {
+void reset_message_location() {
+    drawLocation = 64;
+}
+
+void set_message(LinkedList<char *>& m) {
+    screen_queue.clear();
+
     for (int i = 0; i < m.size(); i++) {
         screen_queue.add(i, m.get(i));
     }
-}
 
-void reset_message_location() {
-    drawLocation = 64;
+    reset_message_location();
 }
 
 int update_message_location() {

@@ -24,4 +24,9 @@ public:
         this->status = this->next_status;
         this->next_status = SHOW_TRANSITION;
     }
+
+    void resetStatus() {
+        this->status = SHOW_TRANSITION;
+        this->next_status = SHOW_FRAME;
+    }
 };
