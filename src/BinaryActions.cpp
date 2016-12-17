@@ -1,10 +1,10 @@
 #include "BinaryActions.h"
 
-bool bitAtK(uint8_t value, int k) {
+bool bitAtK(uint16_t value, int k) {
     return (value & (1 << k)) != 0;
 }
 
-bool isEmpty(uint8_t value, uint8_t begin, uint8_t end) {
+bool isEmpty(uint16_t value, uint8_t begin, uint8_t end) {
     int trueBitCount = 0;
     for (uint8_t i = end; i > begin; i--) {
         if (bitAtK(value, i - 1)) {

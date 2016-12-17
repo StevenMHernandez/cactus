@@ -3,10 +3,10 @@
 LinkedList<char *> screen_queue;
 
 int hiddenLineCount = 0;
-
 int drawLocation = 64;
 
 void reset_message_location() {
+    hiddenLineCount = 0;
     drawLocation = 64;
 }
 
@@ -25,8 +25,7 @@ int update_message_location() {
 
     if (drawLocation <= -16) {
         if (screen_queue.size() == hiddenLineCount) {
-            drawLocation = 64;
-            hiddenLineCount = 0;
+            reset_message_location();
         } else {
             drawLocation += 16;
 

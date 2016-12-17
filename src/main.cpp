@@ -141,7 +141,7 @@ void loop() {
         }
     }
 
-    if (update_counter++ > 4) {
+    if (update_counter++ > 1) {
         if (leftEye.status == SHOW_MESSAGE || rightEye.status == SHOW_MESSAGE) {
             update_message_location();
         } else {
